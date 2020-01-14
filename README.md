@@ -11,50 +11,51 @@
 &emsp;dwadapter提供3个接口用于把数据写入dataway中，分别是WriteMetrics，WriteEvent，WriteFlow。  
 &emsp;WriteMetrics用于将常规的tags与fields写入dataway中，表名由measurement参数指定。
 ```
-    def WriteMetrics(self, measurement, fields, tags=None, timestamp=None):
+     def WriteMetrics(self, measurement, timestamp, fields, tags=None):
         """
-        :param measurement: 字符串类型
+        :param measurement: 必需；字符串类型
+        :param timestamp: 必需；整型，时间戳，纳秒单位
         :param fields: 必需；字典，key为字符串类型，value为字符串，整型，浮点型或者布尔型之一
         :param tags: 非必需；字典，key与value均为字符串类型
-        :param timestamp: 非必需；整型，纳秒时间戳，缺省值为None表示当前时间
         :return: 成功返回True，失败返回False
         """
 ```
 
 &emsp;WriteEvent写入事件信息到dataway中，表名固定为event。level, title, url最终合并于fields参数中。
 ```
-    def WriteEvent(self, level, title, url, tags=None, timestamp=None):
+    def WriteKeyEvent(self, title, timestamp, des=None, link=None, source=None, tags=None):
         """
-        :param level:必需；
-        :param title: 必需；
-        :param url: 必需；字符串类型
+        :param title: 必需；字符串类型
+        :param timestamp: 必需；整型，时间戳，纳秒单位
+        :param des: 非必需；字符串类型
+        :param link: 非必需；字符串类型
+        :param source: 非必需；字符串类型
         :param tags: 非必需；字典，key与value均为字符串类型
-        :param timestamp: 非必需；整型，纳秒时间戳，缺省值为None表示当前时间
         :return: 成功返回True，失败返回False
         """
 ```
 &emsp;WriteFlow写入流程信息到dataway中，表名固定为flow。traceid, name, parent, types最终与tags参数合并；duration最终与fields参数合并。
 ```
-    def WriteFlow(self, traceid, name, parent, types, duration, tags=None, fields=None, timestamp=None):
+    def WriteFlow(self, traceid, name, parent, flowtype, duration, timestamp, tags=None, fields=None):
         """
         :param traceid: 必需；字符串类型
         :param name: 必需；字符串类型
         :param parent: 必需；字符串类型
-        :param types: 必需；字符串类型
-        :param duration: 必需；
+        :param flowtype: 必需；字符串类型
+        :param duration: 必需；整型，毫秒单位
+        :param timestamp: 必需；整型，时间戳，纳秒单位
         :param tags: 非必需；字典，key与value均为字符串类型
         :param fields: 非必需；字典，key为字符串类型，value为字符串，整型，浮点型或者布尔型之一
-        :param timestamp: 非必需；整型，纳秒时间戳，缺省值为None表示当前时间
         :return: 成功返回True，失败返回False
-        """
+        """    
 ```
   
-
-
- 
 # dwadapter使用 #  
 
-&emsp;安装，使用pip install安装，安装文件在[https://gitlab.jiagouyun.com/cloudcare-tools/ftagent/tree/ft-2.0/sdk/python/dataway/dist](https://gitlab.jiagouyun.com/cloudcare-tools/ftagent/tree/ft-2.0/sdk/python/dataway/dist)目录下。
+&emsp;安装，使用
+> python setup.py bdist_wheel
+  
+在dist目录生成.whl文件,然后使用pip install生成的.whl文件即可。
 > pip install  dwadapter-0.0.1-py3-none-any.whl  
 
 使用方式1：NSQ+Dataway，从NSQ中取出消息进行处理，最后写入dataway中。
@@ -72,9 +73,9 @@ class MyHandler(DatawayHttpAdapter):
 		# 业务处理 process(body)
 
 		# 根据业务需要，使用如下接口之一将数据写入dataway
-        # self.WriteMetrics(measurement, fields, tags, timestamp)
-        # self.WriteEvent(level, title, url, tags, timestamp)
-		# self.WriteFlow(traceid, name, parent, types, duration, tags, fields, timestamp)
+        # self.WriteMetrics(measurement, timestamp, fields, tags=None)
+        # self.WriteKeyEvent(title, timestamp, des=None, link=None, source=None, tags=None)
+		# self.WriteFlow(traceid, name, parent, flowtype, duration, timestamp, tags=None, fields=None)
  
 
 if __name__ == "__main__":
@@ -107,7 +108,7 @@ if __name__ == "__main__":
     for i in range(1000):
         adapter.WriteMetrics(measurement="DatawayTest", tags=tags, fields=fields, timestamp=None)
 		# 根据业务需要，使用如下接口之一将数据写入dataway
-        # adapter.WriteMetrics(measurement, fields, tags, timestamp)
-        # adapter.WriteEvent(level, title, url, tags, timestamp)
-		# adapter.WriteFlow(traceid, name, parent, types, duration, tags, fields, timestamp)
+        # adapter.WriteMetrics(measurement, timestamp, fields, tags=None)
+        # adapter.WriteKeyEvent(title, timestamp, des=None, link=None, source=None, tags=None)
+		# adapter.WriteFlow(traceid, name, parent, flowtype, duration, timestamp, tags=None, fields=None)
 ```
