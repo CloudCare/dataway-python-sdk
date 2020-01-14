@@ -1,6 +1,6 @@
 # dataway-python-sdk
 
-&emsp;dwadapter是用python开发的包，用于将NSQ中的消息取出并且进行适配以行协议格式写入dataway中，方便用户专注于自己业务逻辑开发，不需要考虑如何从NSQ中取出消息，数据有效性检查以及行协议格式的转换等。dwadapter包其文件主要如下：
+&emsp;dwadapter是用python开发的包，用于数据进行适配以行协议格式写入dataway中，方便用户专注于自己业务逻辑开发，不需要数据有效性检查以及行协议格式的转换等。另外dwadapter还支持从NSQ消费消息。dwadapter包其文件主要如下：
 - transport.py：负责数据的发送。TransportMixinBase基类定义发送数据接口。HttpTransportMixin子类以HTTP发送行协议数据到dataway；TcpTransportMixin与UdpTransportMixin子类分别以TCP与UDP发送行协议数据到dataway，但是它们暂未实现，留将来扩展使用。  
 - agent.py：负责从NSQ取出消息，其中NsqAgent类是对第三方库pynsq的封装。  
 - check.py：负责在行协议转换之前对数据类型有效性进行检查，即tags与fields等是否符合规范。  
@@ -21,7 +21,7 @@
         """
 ```
 
-&emsp;WriteEvent写入事件信息到dataway中，表名固定为event。level, title, url最终合并于fields参数中。
+&emsp;WriteKeyEvent写入事件信息到dataway中，表名固定为keyevent。source最终合并于tags参数中，title, des，link最终合并于fields参数中。
 ```
     def WriteKeyEvent(self, title, timestamp, des=None, link=None, source=None, tags=None):
         """
@@ -34,7 +34,7 @@
         :return: 成功返回True，失败返回False
         """
 ```
-&emsp;WriteFlow写入流程信息到dataway中，表名固定为flow。traceid, name, parent, types最终与tags参数合并；duration最终与fields参数合并。
+&emsp;WriteFlow写入流程信息到dataway中，表名固定为flow。traceid, name, parent, flowtype最终与tags参数合并；duration最终与fields参数合并。
 ```
     def WriteFlow(self, traceid, name, parent, flowtype, duration, timestamp, tags=None, fields=None):
         """
