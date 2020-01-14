@@ -4,11 +4,11 @@
 - transport.py：负责数据的发送。TransportMixinBase基类定义发送数据接口。HttpTransportMixin子类以HTTP发送行协议数据到dataway；TcpTransportMixin与UdpTransportMixin子类分别以TCP与UDP发送行协议数据到dataway，但是它们暂未实现，留将来扩展使用。  
 - agent.py：负责从NSQ取出消息，其中NsqAgent类是对第三方库pynsq的封装。  
 - check.py：负责在行协议转换之前对数据类型有效性进行检查，即tags与fields等是否符合规范。  
-- adapater.py：负责行协议转换等。DatawayBase基类与其子类DatawayAdapter实现WriteMetrics，WriteEvent与WriteFlow等接口。DatawayHttpAdapter仅仅继承了DatawayAdapter与HttpTransportMixin类，并无其它逻辑；DatawayTcpAdapter，DatawayUdpAdapter类似。  
+- adapater.py：负责行协议转换等。DatawayBase基类与其子类DatawayAdapter实现WriteMetrics，WriteKeyEvent与WriteFlow等接口。DatawayHttpAdapter仅仅继承了DatawayAdapter与HttpTransportMixin类，并无其它逻辑；DatawayTcpAdapter，DatawayUdpAdapter类似。  
 
 
 # 接口说明 # 
-&emsp;dwadapter提供3个接口用于把数据写入dataway中，分别是WriteMetrics，WriteEvent，WriteFlow。  
+&emsp;dwadapter提供3个接口用于把数据写入dataway中，分别是WriteMetrics，WriteKeyEvent，WriteFlow。  
 &emsp;WriteMetrics用于将常规的tags与fields写入dataway中，表名由measurement参数指定。
 ```
      def WriteMetrics(self, measurement, timestamp, fields, tags=None):
