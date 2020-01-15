@@ -1,49 +1,45 @@
-KEY_TYPE_STR = ['str']
+from collections import OrderedDict
 
-TAG_VALUE_TYPE_STR = ['str']
+def check_measurement(measurement):
+    return isinstance(measurement, str)
 
-FIELD_VALUE_TYPE_STR = ['str', 'int', 'float', 'bool']
-
-def CheckMeasurement(measurement):
-    return type(measurement).__name__ == 'str'
-
-def CheckTags(tags):
+def check_tags(tags):
     # tags可以为空
     if not tags:
         return True
 
-    if not isinstance(tags, dict):
+    if not isinstance(tags, dict) and not isinstance(tags, OrderedDict):
         return False
 
-    ks = [type(k).__name__ for k in tags.keys()]
-    key_valid =all([i in KEY_TYPE_STR for i in ks])
+    ks = [isinstance(k, str) for k in tags.keys()]
+    key_valid = all(ks)
 
-    vs = [type(v).__name__ for v in tags.values()]
-    val_valid = all([i in TAG_VALUE_TYPE_STR for i in vs])
+    vs = [isinstance(v, str) for v in tags.values()]
+    val_valid = all(ks)
 
     return  key_valid and val_valid
 
-def CheckFields(fields):
+def check_fields(fields):
     # fileds必须非空
     if not fields:
         return False
 
-    if not isinstance(fields, dict):
+    if not isinstance(fields, dict) and not isinstance(fields, OrderedDict):
         return False
 
-    ks = [type(k).__name__ for k in fields.keys()]
-    key_valid = all([i in KEY_TYPE_STR for i in  ks])
+    ks = [isinstance(k, str) for k in fields.keys()]
+    key_valid = all(ks)
 
-    vs = [type(v).__name__ for v in fields.values()]
-    val_valid = all([i in FIELD_VALUE_TYPE_STR for i in vs])
+    vs = [isinstance(v, (str, int, float, bool)) for v in fields.values()]
+    val_valid = all(vs)
 
     return key_valid and val_valid
 
-def CheckTagsAndFields(tags, fields):
-    return CheckTags(tags) and CheckFields(fields)
+def check_tags_fields(tags, fields):
+    return check_tags(tags) and check_fields(fields)
 
-def CheckTimestamp(timestamp):
-    return type(timestamp).__name__ == 'int'
+def check_timestamp(timestamp):
+    return isinstance(timestamp, int)
 
-def CheckMetrics(measurement, tags, fields, timestamp):
-    return CheckMeasurement(measurement) and CheckTagsAndFields(tags, fields) and CheckTimestamp(timestamp)
+def check_metrics(measurement, tags, fields, timestamp):
+    return check_measurement(measurement) and check_tags_fields(tags, fields) and check_timestamp(timestamp)

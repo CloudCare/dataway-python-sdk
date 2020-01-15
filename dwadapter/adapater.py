@@ -1,19 +1,22 @@
 import sys
+from collections import OrderedDict
 from dwadapter.transport import HttpTransportMixin, TcpTransportMixin, UdpTransportMixin
-from dwadapter.check import CheckMetrics
+from dwadapter.check import check_metrics
 import time
 
 class DatawayBase:
     EVENT_MEASUREMENT = "keyevent"
     FLOW_MEASUREMENT  = "flow"
+
     def __call__(self, msg):
         self.hander(msg)
         return True
 
     def hander(self, msg):
         raise NotImplementedError("Class `{}` must implemente method `{}`.".format(self.__class__.__name__,
+                                        sys._getframe().f_code.co_name))
 
-                                                                         sys._getframe().f_code.co_name))
+
     def WriteMetrics(self, measurement, timestamp, fields, tags=None):
         """
         :param measurement: 必需；字符串类型
@@ -24,6 +27,7 @@ class DatawayBase:
         """
         raise NotImplementedError("Class `{}` must implemente method `{}`.".format(self.__class__.__name__,
                         sys._getframe().f_code.co_name))
+
 
     def WriteKeyEvent(self, title, timestamp, des=None, link=None, source=None, tags=None):
         """
@@ -37,6 +41,7 @@ class DatawayBase:
         """
         raise NotImplementedError("Class `{}` must implemente method `{}`.".format(self.__class__.__name__,
                         sys._getframe().f_code.co_name))
+
 
     def WriteFlow(self, traceid, name, parent, flowtype, duration, timestamp, tags=None, fields=None):
         """
@@ -53,7 +58,8 @@ class DatawayBase:
         raise NotImplementedError("Class `{}` must implemente method `{}`.".format(self.__class__.__name__,
                         sys._getframe().f_code.co_name))
 
-    def _ConvFiledValToStr(self, value):
+
+    def _conv_field_str(self, value):
         type_str = type(value).__name__
         if type_str == "int":
             return "{}i".format(value)
@@ -62,7 +68,8 @@ class DatawayBase:
         else:
             return "{}".format(value)
 
-    def MakeLineProtoData(self, measurement, tags, fields, timestamp):
+
+    def make_proto_str(self, measurement, tags, fields, timestamp):
         line_proto_data = ""
         line_proto_data += "{}".format(measurement)
         is_frist_field = True
@@ -78,53 +85,56 @@ class DatawayBase:
             else:
                 prefix = ","
 
-            line_proto_data += "{}{}={}".format(prefix, key, self._ConvFiledValToStr(val))
+            line_proto_data += "{}{}={}".format(prefix, key, self._conv_field_str(val))
+
 
         line_proto_data += " {}".format(timestamp)
         line_proto_data += "\n"
         return line_proto_data
 
-    def MakeMetricsStr(self, measurement, tags, fields, timestamp):
-        if not CheckMetrics(measurement, tags, fields, timestamp):
+
+    def make_metrics_str(self, measurement, tags, fields, timestamp):
+        if not check_metrics(measurement, tags, fields, timestamp):
             return None
 
-        return self.MakeLineProtoData(measurement, tags, fields, timestamp)
+        return self.make_proto_str(measurement, tags, fields, timestamp)
 
-    def MakeEventStr(self, measurement, title, des, link, source, tags, timestamp):
+
+    def make_event_str(self, measurement, title, des, link, source, tags, timestamp):
         if tags is None:
             tags = {}
-        if not isinstance(tags, dict):
+        if not isinstance(tags, dict) and not isinstance(tags, OrderedDict):
             return None
-        # source类型由CheckMetrics检查
+        # source类型由check_metrics检查
         if source is not None:
             tags["$source"] = source
 
         fields = {}
         # title字段必填且为字符串
-        if title is None or type(title).__name__ != "str":
+        if title is None or not isinstance(title, str):
             return None
         fields["$title"] = title
         # des为选填，若填则必为字符串类型
         if des is not None:
-            if type(des).__name__ != "str":
+            if not isinstance(des, str):
                 return None
             fields["$des"] =des
         # des为选填，若填则必为字符串类型
         if link is not None:
-            if type(link).__name__ != "str":
+            if not isinstance(link, str):
                 return None
             fields["$link"] = link
 
-        if not CheckMetrics(measurement, tags, fields, timestamp):
+        if not check_metrics(measurement, tags, fields, timestamp):
             return None
 
-        return self.MakeLineProtoData(measurement, tags, fields, timestamp)
+        return self.make_proto_str(measurement, tags, fields, timestamp)
 
 
-    def MakeFlowStr(self, measurement, traceid, name, parent, flowtype, duration, tags, fields, timestamp):
+    def make_flow_str(self, measurement, traceid, name, parent, flowtype, duration, tags, fields, timestamp):
         if tags is None:
             tags = {}
-        if not isinstance(tags, dict):
+        if not isinstance(tags, dict) and not isinstance(tags, OrderedDict):
             return None
         tags["$traceId"] = traceid
         tags["$name"]    = name
@@ -133,22 +143,22 @@ class DatawayBase:
 
         if fields is None:
             fields = {}
-        if not isinstance(fields, dict):
+        if not isinstance(fields, dict) and not isinstance(fields, OrderedDict):
             return None
-        if type(duration).__name__ != "int":
+        if not isinstance(duration, int):
             return None
         fields["$duration"] = duration
 
-        if not CheckMetrics(measurement, tags, fields, timestamp):
+        if not check_metrics(measurement, tags, fields, timestamp):
             return None
 
-        return self.MakeLineProtoData(measurement, tags, fields, timestamp)
+        return self.make_proto_str(measurement, tags, fields, timestamp)
 
 
 class DatawayAdapter(DatawayBase):
     def WriteMetrics(self, measurement, timestamp, fields, tags=None):
         r = 0
-        data = self.MakeMetricsStr(measurement, tags, fields, timestamp)
+        data = self.make_metrics_str(measurement, tags, fields, timestamp)
         if data:
             r = self.transport(data)
         return r == 200
@@ -156,35 +166,30 @@ class DatawayAdapter(DatawayBase):
 
     def WriteKeyEvent(self, title, timestamp, des=None, link=None, source=None, tags=None):
         r = 0
-        data = self.MakeEventStr(self.EVENT_MEASUREMENT, title, des, link, source, tags, timestamp)
+        data = self.make_event_str(self.EVENT_MEASUREMENT, title, des, link, source, tags, timestamp)
         if data:
             r = self.transport(data)
         return r == 200
 
+
     def WriteFlow(self, traceid, name, parent, flowtype, duration, timestamp, tags=None, fields=None):
         r = 0
-        data = self.MakeFlowStr(self.FLOW_MEASUREMENT, traceid, name, parent, flowtype, duration, tags, fields, timestamp)
+        data = self.make_flow_str(self.FLOW_MEASUREMENT, traceid, name, parent, flowtype, duration, tags, fields, timestamp)
         if data:
             r = self.transport(data)
         return r == 200
 
 
 class DatawayHttpAdapter(DatawayAdapter, HttpTransportMixin):
-
     def __init__(self, **kwargs):
         HttpTransportMixin.__init__(self, **kwargs)
 
 
 class DatawayTcpAdapter(DatawayAdapter, TcpTransportMixin):
-
     def __init__(self, **kwargs):
         HttpTransportMixin.__init__(self, **kwargs)
 
 
 class DatawayUdpAdapter(DatawayAdapter, UdpTransportMixin):
-
     def __init__(self, **kwargs):
         HttpTransportMixin.__init__(self, **kwargs)
-
-
-
