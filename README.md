@@ -87,6 +87,9 @@ if __name__ == "__main__":
                      topic   = "test",            # 消费的topic名称
                      channel = "test_process",	  # 消费的channel名称
                      handler =  MyHandler(dataway_url="http://10.100.64.106:19528/v1/write/metrics") # 自定义消息处理逻辑
+                     uuid = "xxx",      # 填入UUID信息，选填
+                     pk   = "xxx",      # 若dataway开启认证，必须填入dataway公钥
+                     sk   = "xxx",      # 若dataway开启认证，必须填入dataway私钥
                      )
     agent.start()
 ```  
@@ -100,7 +103,11 @@ from dwadapter.adapater import DatawayHttpAdapter
 
 if __name__ == "__main__":
 	# 必须以关键字参数初始化DatawayHttpAdapter
-    adapter = DatawayHttpAdapter(dataway_url="http://10.100.64.106:19528/v1/write/metrics")
+    adapter = DatawayHttpAdapter(dataway_url="http://10.100.64.106:19528/v1/write/metrics"
+                                 uuid = "xxx",      # 填入UUID信息，选填
+                                 pk   = "xxx",      # 若dataway开启认证，必须填入dataway公钥
+                                 sk   = "xxx",      # 若dataway开启认证，必须填入dataway私钥
+)
     tags = {"city":"sh"}
     fields = {
         "float" : 1.2,
