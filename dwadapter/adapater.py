@@ -97,23 +97,23 @@ class DatawayBase:
             return None
         # source类型由CheckMetrics检查
         if source is not None:
-            tags["source"] = source
+            tags["$source"] = source
 
         fields = {}
         # title字段必填且为字符串
         if title is None or type(title).__name__ != "str":
             return None
-        fields["title"] = title
+        fields["$title"] = title
         # des为选填，若填则必为字符串类型
         if des is not None:
             if type(des).__name__ != "str":
                 return None
-            fields["des"] =des
+            fields["$des"] =des
         # des为选填，若填则必为字符串类型
         if link is not None:
             if type(link).__name__ != "str":
                 return None
-            fields["link"] = link
+            fields["$link"] = link
 
         if not CheckMetrics(measurement, tags, fields, timestamp):
             return None
@@ -126,10 +126,10 @@ class DatawayBase:
             tags = {}
         if not isinstance(tags, dict):
             return None
-        tags["traceId"] = traceid
-        tags["name"]    = name
-        tags["parent"]  = parent
-        tags["type"]    = flowtype
+        tags["$traceId"] = traceid
+        tags["$name"]    = name
+        tags["$parent"]  = parent
+        tags["$type"]    = flowtype
 
         if fields is None:
             fields = {}
@@ -137,7 +137,7 @@ class DatawayBase:
             return None
         if type(duration).__name__ != "int":
             return None
-        fields["duration"] = duration
+        fields["$duration"] = duration
 
         if not CheckMetrics(measurement, tags, fields, timestamp):
             return None
@@ -185,3 +185,6 @@ class DatawayUdpAdapter(DatawayAdapter, UdpTransportMixin):
 
     def __init__(self, **kwargs):
         HttpTransportMixin.__init__(self, **kwargs)
+
+
+
