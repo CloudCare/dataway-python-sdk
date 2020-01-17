@@ -115,7 +115,7 @@ class DatawayBase:
             "T": tags_list,
             "F": fields_list,
             "TS": timestamp,
-            "TP": "ns"
+            # "TP": "ns"
         }]
 
         return json.dumps(d)

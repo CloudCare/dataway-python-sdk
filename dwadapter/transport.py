@@ -26,7 +26,7 @@ class TransportMixinBase:
 class HttpTransportMixin(TransportMixinBase):
     transport_required_para = ["dataway_url"]
     transport_authen_para   = ["pk","sk"]
-    content_type   = "application/octet-stream"
+    content_type   = "application/json"
     content_coding = "gzip"
     uuid = "default_uuid"
 
