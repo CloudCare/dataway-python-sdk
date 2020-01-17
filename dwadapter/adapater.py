@@ -1,5 +1,6 @@
 import sys
 from collections import OrderedDict
+import json
 from dwadapter.transport import HttpTransportMixin, TcpTransportMixin, UdpTransportMixin
 from dwadapter.check import check_metrics
 import time
@@ -93,11 +94,39 @@ class DatawayBase:
         return line_proto_data
 
 
+    def make_json_str(self, measurement, tags, fields, timestamp):
+        tags_list = []
+        fields_list = []
+
+        if tags:
+            for k, v in tags.items():
+                tags_list.append({"k":k, "v":v})
+
+        for k, v in fields.items():
+            if isinstance(v, bool):
+                fields_list.append({"k": k, "v": v, "t": "b"})
+            elif isinstance(v, int):
+                fields_list.append({"k":k, "v":v, "t":"i"})
+            else:
+                fields_list.append({"k": k, "v": v})
+
+        d = [{
+            "M": measurement,
+            "T": tags_list,
+            "F": fields_list,
+            "TS": timestamp,
+            "TP": "ns"
+        }]
+
+        return json.dumps(d)
+
+
+
     def make_metrics_str(self, measurement, tags, fields, timestamp):
         if not check_metrics(measurement, tags, fields, timestamp):
             return None
 
-        return self.make_proto_str(measurement, tags, fields, timestamp)
+        return self.make_json_str(measurement, tags, fields, timestamp)
 
 
     def make_event_str(self, measurement, title, des, link, source, tags, timestamp):
@@ -128,7 +157,7 @@ class DatawayBase:
         if not check_metrics(measurement, tags, fields, timestamp):
             return None
 
-        return self.make_proto_str(measurement, tags, fields, timestamp)
+        return self.make_json_str(measurement, tags, fields, timestamp)
 
 
     def make_flow_str(self, measurement, traceid, name, parent, flowtype, duration, tags, fields, timestamp):
@@ -152,7 +181,7 @@ class DatawayBase:
         if not check_metrics(measurement, tags, fields, timestamp):
             return None
 
-        return self.make_proto_str(measurement, tags, fields, timestamp)
+        return self.make_json_str(measurement, tags, fields, timestamp)
 
 
 class DatawayAdapter(DatawayBase):
