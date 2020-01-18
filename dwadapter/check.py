@@ -15,7 +15,7 @@ def check_tags(tags):
     key_valid = all(ks)
 
     vs = [isinstance(v, str) for v in tags.values()]
-    val_valid = all(ks)
+    val_valid = all(vs)
 
     return  key_valid and val_valid
 
