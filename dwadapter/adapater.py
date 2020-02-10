@@ -1,13 +1,34 @@
 import sys
 from collections import OrderedDict
 import json
+import re
 from dwadapter.transport import HttpTransportMixin, TcpTransportMixin, UdpTransportMixin
 from dwadapter.check import check_metrics
-import time
 
 class DatawayBase:
-    EVENT_MEASUREMENT = "keyevent"
-    FLOW_MEASUREMENT  = "flow"
+    EVENT_MEASUREMENT = "$keyevent"
+    FLOW_MEASUREMENT  = "$flow"
+
+    adapter_required_para = ["app"]
+    def __init__(self, **kwargs):
+        self.adapter_kwargs = dict()
+
+        for name in self.adapter_required_para:
+            assert name in kwargs.keys(), (
+                "Expected a `{}` key-word parameter in Class `{}`, but it missed.".format(name, self.__class__.__name__)
+            )
+            self.adapter_kwargs[name] = kwargs.pop(name)
+
+        if not self._check_app(self.adapter_kwargs["app"]):
+            raise ValueError("app parameter error.")
+        self.FLOW_MEASUREMENT += "_"+self.adapter_kwargs["app"]
+
+        super().__init__(**kwargs)
+
+    def _check_app(self, app):
+        if not isinstance(app, str) or len(app) > 40:
+            return False
+        return re.search(r'[^\w-]', app) == None
 
     def __call__(self, msg):
         self.hander(msg)
@@ -44,12 +65,11 @@ class DatawayBase:
                         sys._getframe().f_code.co_name))
 
 
-    def WriteFlow(self, traceid, name, parent, flowtype, duration, timestamp, tags=None, fields=None):
+    def WriteFlow(self, traceid, name, parent, duration, timestamp, tags=None, fields=None):
         """
         :param traceid: 必需；字符串类型
         :param name: 必需；字符串类型
         :param parent: 必需；字符串类型
-        :param flowtype: 必需；字符串类型
         :param duration: 必需；整型，毫秒单位
         :param timestamp: 必需；整型，时间戳，纳秒单位
         :param tags: 非必需；字典，key与value均为字符串类型
@@ -132,8 +152,9 @@ class DatawayBase:
     def make_event_str(self, measurement, title, des, link, source, tags, timestamp):
         if tags is None:
             tags = {}
-        if not isinstance(tags, dict) and not isinstance(tags, OrderedDict):
+        elif not isinstance(tags, dict) and not isinstance(tags, OrderedDict):
             return None
+        tags = tags.copy()
         # source类型由check_metrics检查
         if source is not None:
             tags["$source"] = source
@@ -148,7 +169,7 @@ class DatawayBase:
             if not isinstance(des, str):
                 return None
             fields["$des"] =des
-        # des为选填，若填则必为字符串类型
+        # link为选填，若填则必为字符串类型
         if link is not None:
             if not isinstance(link, str):
                 return None
@@ -160,22 +181,25 @@ class DatawayBase:
         return self.make_json_str(measurement, tags, fields, timestamp)
 
 
-    def make_flow_str(self, measurement, traceid, name, parent, flowtype, duration, tags, fields, timestamp):
+    def make_flow_str(self, measurement, traceid, name, parent, duration, tags, fields, timestamp):
         if tags is None:
             tags = {}
-        if not isinstance(tags, dict) and not isinstance(tags, OrderedDict):
+        elif not isinstance(tags, dict) and not isinstance(tags, OrderedDict):
             return None
+        tags = tags.copy()
         tags["$traceId"] = traceid
         tags["$name"]    = name
         tags["$parent"]  = parent
-        tags["$type"]    = flowtype
+
+        if not isinstance(duration, int):
+            return None
 
         if fields is None:
             fields = {}
-        if not isinstance(fields, dict) and not isinstance(fields, OrderedDict):
+        elif not isinstance(fields, dict) and not isinstance(fields, OrderedDict):
             return None
-        if not isinstance(duration, int):
-            return None
+        fields = fields.copy()
+
         fields["$duration"] = duration
 
         if not check_metrics(measurement, tags, fields, timestamp):
@@ -185,6 +209,9 @@ class DatawayBase:
 
 
 class DatawayAdapter(DatawayBase):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
     def WriteMetrics(self, measurement, timestamp, fields, tags=None):
         r = 0
         data = self.make_metrics_str(measurement, tags, fields, timestamp)
@@ -197,28 +224,30 @@ class DatawayAdapter(DatawayBase):
         r = 0
         data = self.make_event_str(self.EVENT_MEASUREMENT, title, des, link, source, tags, timestamp)
         if data:
+            print(data)
             r = self.transport(data)
         return r == 200
 
 
-    def WriteFlow(self, traceid, name, parent, flowtype, duration, timestamp, tags=None, fields=None):
+    def WriteFlow(self, traceid, name, parent, duration, timestamp, tags=None, fields=None):
         r = 0
-        data = self.make_flow_str(self.FLOW_MEASUREMENT, traceid, name, parent, flowtype, duration, tags, fields, timestamp)
+        data = self.make_flow_str(self.FLOW_MEASUREMENT, traceid, name, parent, duration, tags, fields, timestamp)
         if data:
+            print(data)
             r = self.transport(data)
         return r == 200
 
 
 class DatawayHttpAdapter(DatawayAdapter, HttpTransportMixin):
     def __init__(self, **kwargs):
-        HttpTransportMixin.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
 
 class DatawayTcpAdapter(DatawayAdapter, TcpTransportMixin):
     def __init__(self, **kwargs):
-        HttpTransportMixin.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
 
 class DatawayUdpAdapter(DatawayAdapter, UdpTransportMixin):
     def __init__(self, **kwargs):
-        HttpTransportMixin.__init__(self, **kwargs)
+        super().__init__(**kwargs)

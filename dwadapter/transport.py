@@ -8,6 +8,9 @@ import base64
 
 
 class TransportMixinBase:
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
     def create(self):
         raise NotImplementedError("Class {} must implemente method {}.".format(self.__class__.__name__,
                         sys._getframe().f_code.co_name))
@@ -50,6 +53,8 @@ class HttpTransportMixin(TransportMixinBase):
             self.transport_kwargs["uuid"] = kwargs.pop("uuid")
         else:
             self.transport_kwargs["uuid"] = self.uuid
+
+        super().__init__(**kwargs)
 
 
     def create(self):

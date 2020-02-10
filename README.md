@@ -37,14 +37,13 @@ dwadapter 包其文件主要如下：
         :return: 成功返回True，失败返回False
         """
 ```
-&emsp;WriteFlow写入流程信息到 DataWay 中，表名固定为flow。traceid, name, parent, flowtype最终与tags参数合并；duration最终与fields参数合并。
+&emsp;WriteFlow写入流程信息到 DataWay 中，表名固定为flow。traceid, name, parent最终与tags参数合并；duration最终与fields参数合并。
 ```
-    def WriteFlow(self, traceid, name, parent, flowtype, duration, timestamp, tags=None, fields=None):
+    def WriteFlow(self, traceid, name, parent, duration, timestamp, tags=None, fields=None):
         """
         :param traceid: 必需；字符串类型
         :param name: 必需；字符串类型
         :param parent: 必需；字符串类型
-        :param flowtype: 必需；字符串类型
         :param duration: 必需；整型，毫秒单位
         :param timestamp: 必需；整型，时间戳，纳秒单位
         :param tags: 非必需；字典，key与value均为字符串类型
@@ -78,7 +77,7 @@ class MyHandler(DatawayHttpAdapter):
 		# 根据业务需要，使用如下接口之一将数据写入 DataWay
         # self.WriteMetrics(measurement, timestamp, fields, tags=None)
         # self.WriteKeyEvent(title, timestamp, des=None, link=None, source=None, tags=None)
-		# self.WriteFlow(traceid, name, parent, flowtype, duration, timestamp, tags=None, fields=None)
+		# self.WriteFlow(traceid, name, parent, duration, timestamp, tags=None, fields=None)
  
 
 if __name__ == "__main__":
@@ -86,11 +85,12 @@ if __name__ == "__main__":
     agent = NsqAgent(nsq_url = "127.0.0.1:4161",  # nsq地址
                      topic   = "test",            # 消费的topic名称
                      channel = "test_process",	  # 消费的channel名称
-                     handler =  MyHandler(dataway_url="http://10.100.64.106:19528/v1/write/metrics") # 自定义消息处理逻辑
+                     handler =  MyHandler(dataway_url="http://10.100.64.106:19528/v1/write/metrics", # 自定义消息处理逻辑
                      uuid = "xxx",      # 填入UUID信息，选填
                      pk   = "xxx",      # 若dataway开启认证，必须填入dataway公钥
                      sk   = "xxx",      # 若dataway开启认证，必须填入dataway私钥
-                     )
+                     app  = "oa" ,      # flow后缀名，大小写字母数字下划线中划线组成，最长40个字符
+                     ))
     agent.start()
 ```  
 
@@ -107,6 +107,7 @@ if __name__ == "__main__":
                                  uuid = "xxx",      # 填入UUID信息，选填
                                  pk   = "xxx",      # 若dataway开启认证，必须填入dataway公钥
                                  sk   = "xxx",      # 若dataway开启认证，必须填入dataway私钥
+                                 app  = "oa" ,      # flow后缀名，大小写字母数字下划线中划线组成，最长40个字符
 )
     tags = {"city":"sh"}
     fields = {
@@ -120,5 +121,5 @@ if __name__ == "__main__":
 		# 根据业务需要，使用如下接口之一将数据写入 DataWay
         # adapter.WriteMetrics(measurement, timestamp, fields, tags=None)
         # adapter.WriteKeyEvent(title, timestamp, des=None, link=None, source=None, tags=None)
-		# adapter.WriteFlow(traceid, name, parent, flowtype, duration, timestamp, tags=None, fields=None)
+		# adapter.WriteFlow(traceid, name, parent, duration, timestamp, tags=None, fields=None)
 ```
