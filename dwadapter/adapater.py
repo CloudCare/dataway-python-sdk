@@ -224,7 +224,6 @@ class DatawayAdapter(DatawayBase):
         r = 0
         data = self.make_event_str(self.EVENT_MEASUREMENT, title, des, link, source, tags, timestamp)
         if data:
-            print(data)
             r = self.transport(data)
         return r == 200
 
@@ -233,7 +232,6 @@ class DatawayAdapter(DatawayBase):
         r = 0
         data = self.make_flow_str(self.FLOW_MEASUREMENT, traceid, name, parent, duration, tags, fields, timestamp)
         if data:
-            print(data)
             r = self.transport(data)
         return r == 200
 
