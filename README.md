@@ -126,4 +126,5 @@ if __name__ == "__main__":
         # adapter.WriteMetrics(measurement, timestamp, fields, tags=None)
         # adapter.WriteKeyEvent(title, timestamp, des=None, link=None, source=None, tags=None)
 		# adapter.WriteFlow(traceid, name, parent, duration, timestamp, tags=None, fields=None)
+    #adapter.flush() 当batch_size大于1时，确保清空发送缓冲区
 ```
