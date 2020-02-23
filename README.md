@@ -90,6 +90,8 @@ if __name__ == "__main__":
                      pk   = "xxx",      # 若dataway开启认证，必须填入dataway公钥
                      sk   = "xxx",      # 若dataway开启认证，必须填入dataway私钥
                      app  = "oa" ,      # flow后缀名，大小写字母数字下划线中划线组成，最长40个字符
+                     batch_size = 2,    # 可选，batch_size个数据点组成一个http请求，默认为1
+                     batch_time = 3     # 可选，每batch_time秒固定发送http请求，默认0，不开启
                      ))
     agent.start()
 ```  
@@ -108,6 +110,8 @@ if __name__ == "__main__":
                                  pk   = "xxx",      # 若dataway开启认证，必须填入dataway公钥
                                  sk   = "xxx",      # 若dataway开启认证，必须填入dataway私钥
                                  app  = "oa" ,      # flow后缀名，大小写字母数字下划线中划线组成，最长40个字符
+                                 batch_size = 2,    # 可选，batch_size个数据点组成一个http请求，默认为1
+                                 batch_time = 3     # 可选，每batch_time秒固定发送http请求，默认0，不开启
 )
     tags = {"city":"sh"}
     fields = {

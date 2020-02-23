@@ -9,7 +9,8 @@ import base64
 
 class TransportMixinBase:
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        super().__init__()
+
 
     def create(self):
         raise NotImplementedError("Class {} must implemente method {}.".format(self.__class__.__name__,
